@@ -1,8 +1,8 @@
-#! /bin/bash
+#! /bin/sh
 
 file=$1
 
-ip=""
+
 
 API_TOKEN=$(printenv CF_TOKEN)
 ZONE_ID=$(printenv CF_ZONE)
@@ -11,7 +11,7 @@ DNS_RECORD_ID=$(printenv CF_DNS_ID)
 
 function update_cloudflare_ip() {
     new_ip=$1
-    curl -X PUT "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records/${DNS_RECORD_ID}" \
+    curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records/${DNS_RECORD_ID}" \
      -H "Authorization: Bearer ${API_TOKEN}" \
      -H "Content-Type: application/json" \
      --data '{
@@ -22,11 +22,11 @@ function update_cloudflare_ip() {
        "proxied": false
      }'
 }
-
+ip=""
 while true
 do
-    echo "check ip in time interval"
-    date
+    echo "check ip in time interval, time: $(date)"
+    echo "current ip is $ip"
     new_ip=$(grep '选择最佳连接' $1 | tail -n 1 | awk '{print $5}' | cut -d ':' -f 1)
     if [ -z "$new_ip" ]; then
         echo "ip not found"
@@ -34,13 +34,13 @@ do
         continue
     fi
     if [ "$new_ip" != "$ip" ]; then
-        ip=$new_ip
-        echo "update ip to $ip"
-        update_cloudflare_ip $ip
-        echo "update cloudflare ip"
+        echo "update ip to $new_ip"
+        test $(update_cloudflare_ip "$new_ip") && echo "update cloudflare ip success" && ip=$new_ip
         echo ""
     else
-        echo "ip not changed"
+        echo "ip ${ip} not changed"
     fi
+    # 定期清空日志
+    truncate -s 0 my_log.log
     sleep 60
 done
