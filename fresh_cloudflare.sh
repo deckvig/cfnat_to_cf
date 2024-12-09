@@ -27,7 +27,7 @@ while true
 do
     echo "check ip in time interval, time: $(date)"
     echo "current ip is $ip"
-    new_ip=$(grep '选择最佳连接' $1 | tail -n 1 | awk '{print $5}' | cut -d ':' -f 1)
+    new_ip=$(grep '选择最佳连接' ${file} | tail -n 1 | awk '{print $5}' | cut -d ':' -f 1)
     if [ -z "$new_ip" ]; then
         echo "ip not found"
         sleep 60
@@ -41,6 +41,6 @@ do
         echo "ip ${ip} not changed"
     fi
     # 定期清空日志
-    truncate -s 0 my_log.log
+    truncate -s 0 ${file}
     sleep 60
 done
